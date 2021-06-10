@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 輸出log4j2 相關 log 層級 -->
+<Configuration status="INFO" strict="true" name="XMLConfig">
+
+    <Properties>
+        <Property name="file-folder">${sys:user.home}</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- 輸出 log 格式 -->
+        <Appender type="Console" name="STDOUT">
+            <Layout type="PatternLayout" pattern="%d %p [%c] (%F:%L) :: %m%n"/>
+        </Appender>
+
+        <RollingFile name="RollingFile" fileName="${file-folder}/FilesMoveToS3.log"
+                     filePattern="${file-folder}/property-utils-%d{yyyy-MM-dd}.log">
+            <PatternLayout>
+                <Pattern>[%-5p] %d{yyyy-MM-dd HH:mm:ss,SSS} (%F:%L) - %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy modulate="true" interval="1"/>
+                <SizeBasedTriggeringPolicy size="200MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${file-folder}/" maxDepth="1">
+                    <IfFileName glob="${file-folder}/property-utils-*.log" />
+                    <IfLastModified age="15d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+    </Appenders>
+
+
+    <Loggers>
+
+        <!-- 特定class 底下 輸出log -->
+
+        <!-- Url Mapping -->
+        <Logger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="TRACE" additivity="false">
+            <AppenderRef ref="STDOUT" />
+            <AppenderRef ref="RollingFile" />
+        </Logger>
+
+
+        <!-- root 輸出 log 層級 -->
+        <Root level="INFO">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>

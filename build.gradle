@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+}
+
+group 'com.utils'
+version '1.0'
+def jarName = rootProject.name +'-'+ version
+def projectDir = rootProject.projectDir
+def jarDeployTarget = 'Your-S3-Bucket'
+def path=""
+jar {
+    from {
+        // load the require jar while building jar
+        configurations.runtimeClasspath.filter { it.exists() }.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude('**/*.properties')
+}
+
+jar.shouldRunAfter(clean)
+
+task uploadJarToS3Bucket(dependsOn: [clean, jar]) {
+    group("build")
+    path = "$projectDir/build/libs/${jarName}.jar"
+    //Do last otherwise can't find dir
+    print(path)
+    doLast {
+        exec {
+            commandLine 'aws', 's3', 'mv' , "${path}", "${jarDeployTarget}", '--acl', 'public-read'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation 'com.google.code.gson:gson:2.8.7'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.14.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.14.1'
+
+}
